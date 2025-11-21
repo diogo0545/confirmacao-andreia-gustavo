@@ -1,120 +1,120 @@
-<!-- Página de Confirmação de Presença - Andreia & Gustavo -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Confirmação de Presença</title>
+    <title>Lista de Confirmados</title>
+
     <style>
         body {
             font-family: Arial, sans-serif;
             background: #f6faf8;
             margin: 0;
-            padding: 0;
+            padding: 20px;
             color: #2e3d35;
-        }
-        .container {
-            max-width: 420px;
-            margin: 40px auto;
-            background: white;
-            padding: 25px;
-            border-radius: 18px;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.08);
-            border: 2px solid #c8efe2;
         }
         h2 {
             text-align: center;
             color: #4fb79a;
+            margin-bottom: 25px;
         }
-        label {
-            display: block;
-            margin-top: 15px;
-            font-weight: bold;
-        }
-        input, select {
+        table {
             width: 100%;
-            padding: 10px;
-            margin-top: 5px;
-            border-radius: 8px;
-            border: 1px solid #9cd5c3;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.08);
         }
-        button {
-            width: 100%;
-            margin-top: 20px;
-            padding: 12px;
+        th, td {
+            padding: 14px;
+            text-align: left;
+            border-bottom: 1px solid #e9f4ef;
+        }
+        th {
             background: #4fb79a;
             color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            cursor: pointer;
         }
-        .msg {
-            margin-top: 20px;
+        tr:hover {
+            background: #f1faf7;
+        }
+        #atualizando {
             text-align: center;
-            font-size: 15px;
+            margin-top: 15px;
             color: #4fb79a;
             font-weight: bold;
         }
+        .top-buttons {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .btn {
+            background: #4fb79a;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 10px;
+            text-decoration: none;
+            display: inline-block;
+        }
     </style>
 </head>
+
 <body>
-    <div class="container">
-        <h2>Confirmação de Presença</h2>
+    <h2>Lista de Confirmados</h2>
 
-        <label>Seu nome completo</label>
-        <input id="nome" type="text" placeholder="Digite seu nome" required>
-
-        <label>Você irá ao casamento?</label>
-        <select id="presenca">
-            <option value="true">Sim</option>
-            <option value="false">Não</option>
-        </select>
-
-        <label>Quantidade de acompanhantes</label>
-        <input id="acompanhantes" type="number" min="0" value="0">
-
-        <button onclick="enviar()">Confirmar</button>
-
-        <div class="msg" id="msg"></div>
+    <div class="top-buttons">
+        <a href="index.html" class="btn">Voltar para página de confirmação</a>
     </div>
 
+    <table>
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Presença</th>
+                <th>Acompanhantes</th>
+            </tr>
+        </thead>
+        <tbody id="tabela"></tbody>
+    </table>
+
+    <div id="atualizando">Carregando lista...</div>
+
 <script>
-    const SUPABASE_URL = "COLE_AQUI_URL";
-    const SUPABASE_KEY = "COLE_AQUI_KEY";
+    const SUPABASE_URL = "https://ynxqcvwxqeuxdennbtgi.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlueHFjdnd4cWV1eGRlbm5idGdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3NTQ0OTEsImV4cCI6MjA3OTMzMDQ5MX0.PtQ8gG7xsVQ33y8EKvI5Kc4miWCP9TXd8z51UU1w0LE";
 
-    async function enviar() {
-        const nome = document.getElementById("nome").value;
-        const presenca = document.getElementById("presenca").value === "true";
-        const acompanhantes = parseInt(document.getElementById("acompanhantes").value);
+    async function carregarLista() {
+        document.getElementById("atualizando").innerText = "Atualizando...";
 
-        if (!nome) {
-            document.getElementById("msg").innerText = "Digite seu nome antes de confirmar.";
-            return;
-        }
-
-        const data = {
-            nome: nome,
-            presenca: presenca,
-            acompanhantes: acompanhantes
-        };
-
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/confirmacoes`, {
-            method: "POST",
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/confirmacoes?select=*`, {
             headers: {
-                "Content-Type": "application/json",
                 "apikey": SUPABASE_KEY,
-                "Authorization": `Bearer ${SUPABASE_KEY}`
-            },
-            body: JSON.stringify(data)
+                "Authorization": `Bearer ${SUPABASE_KEY}`,
+            }
         });
 
-        if (response.ok) {
-            document.getElementById("msg").innerText = "Confirmação enviada com sucesso!";
-        } else {
-            document.getElementById("msg").innerText = "Erro ao enviar confirmação.";
-        }
+        const dados = await response.json();
+        const tabela = document.getElementById("tabela");
+        tabela.innerHTML = "";
+
+        dados.forEach(item => {
+            const linha = `
+                <tr>
+                    <td>${item.nome}</td>
+                    <td>${item.presenca ? "Sim" : "Não"}</td>
+                    <td>${item.acompanhantes}</td>
+                </tr>
+            `;
+            tabela.innerHTML += linha;
+        });
+
+        document.getElementById("atualizando").innerText = "Lista atualizada";
     }
+
+    carregarLista();               // Carrega ao abrir
+    setInterval(carregarLista, 5000); // Atualiza a cada 5s
 </script>
+
 </body>
 </html>
+
